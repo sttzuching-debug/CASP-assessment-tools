@@ -67,10 +67,8 @@ if uploaded_file:
             with st.spinner("解析文獻與生成 CASP 報告中..."):
                 paper_text = extract_text_with_pages(uploaded_file)
                 st.session_state["paper_text"] = paper_text
-                prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
-                
-                # 下面這行 resp 必須跟上面的 prompt 切齊
-               resp = client.models.generate_content(
+               prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
+                resp = client.models.generate_content(
                     model='gemini-1.5-flash',
                     contents=prompt,
                     config=types.GenerateContentConfig(
@@ -95,10 +93,8 @@ if uploaded_file:
             if "audited_result" not in st.session_state:
                 if st.button("🕵️ 啟動深度覆核 (Re-assessment)"):
                     with st.spinner("資深稽核員交叉比對中..."):
-                        prompt = f"{AUDITOR_SYSTEM_PROMPT}\n\n原文：{st.session_state['paper_text']}\n\n初判：{json.dumps(st.session_state['appraisal_result'])}"
-                        
-                        # 同樣要注意這裡的對齊
-                        resp = client.models.generate_content(
+                        prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
+                resp = client.models.generate_content(
                     model='gemini-1.5-flash',
                     contents=prompt,
                     config=types.GenerateContentConfig(
