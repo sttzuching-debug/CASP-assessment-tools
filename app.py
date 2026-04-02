@@ -18,6 +18,17 @@ if not api_key:
 genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-1.5-pro-flash", generation_config={"response_mime_type": "application/json", "temperature": 0})
 
+st.sidebar.markdown("---")
+st.sidebar.subheader("🛠️ 系統診斷")
+if st.sidebar.button("測試 API 連線與可用模型"):
+    try:
+        # 嘗試向 Google 請求列出這把 Key 可以用的所有模型
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        st.sidebar.success("連線成功！您的 API Key 支援以下模型：")
+        st.sidebar.write(available_models)
+    except Exception as e:
+        st.sidebar.error(f"連線失敗，詳細錯誤：{e}")
+
 # 在地情境設定檔
 SAVED_PROFILE = {
     "setting": "東部醫學中心急診部",
