@@ -67,7 +67,7 @@ if uploaded_file:
             with st.spinner("解析文獻與生成 CASP 報告中..."):
                 paper_text = extract_text_with_pages(uploaded_file)
                 st.session_state["paper_text"] = paper_text
-               prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
+                prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
                 resp = client.models.generate_content(
                     model='gemini-1.5-flash',
                     contents=prompt,
@@ -76,6 +76,8 @@ if uploaded_file:
                         temperature=0.0
                     )
                 )
+                st.session_state["appraisal_result"] = json.loads(resp.text)
+                st.rerun()
                 
                 st.session_state["appraisal_result"] = json.loads(resp.text)
                 st.rerun()
@@ -90,18 +92,19 @@ if uploaded_file:
                     if 'Auditor_Note' in val:
                         st.info(f"**🛡️ 稽核：** {val['Auditor_Note']}")
             
-            if "audited_result" not in st.session_state:
-                if st.button("🕵️ 啟動深度覆核 (Re-assessment)"):
+            if st.button("🕵️ 啟動深度覆核 (Re-assessment)"):
                     with st.spinner("資深稽核員交叉比對中..."):
-                        prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
-                resp = client.models.generate_content(
-                    model='gemini-1.5-flash',
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        temperature=0.0
-                    )
-                )
+                        prompt = f"{AUDITOR_SYSTEM_PROMPT}\n\n原文：{st.session_state['paper_text']}\n\n初判：{json.dumps(st.session_state['appraisal_result'])}"
+                        resp = client.models.generate_content(
+                            model='gemini-1.5-flash',
+                            contents=prompt,
+                            config=types.GenerateContentConfig(
+                                response_mime_type="application/json",
+                                temperature=0.0
+                            )
+                        )
+                        st.session_state["audited_result"] = json.loads(resp.text)
+                        st.rerun()
                         
                         st.session_state["audited_result"] = json.loads(resp.text)
                         st.rerun()
