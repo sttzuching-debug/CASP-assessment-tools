@@ -16,7 +16,7 @@ if not api_key:
     st.stop()
 
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel("gemini-1.5-pro-flash", generation_config={"response_mime_type": "application/json", "temperature": 0})
+model = genai.GenerativeModel("models/gemini-1.5-flash")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🛠️ 系統診斷")
