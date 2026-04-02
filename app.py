@@ -1,5 +1,6 @@
 import streamlit as st
 from google import genai
+from google.genai import types
 import json
 import base64
 from utils.pdf_processor import extract_text_with_pages
@@ -69,10 +70,13 @@ if uploaded_file:
                 prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
                 
                 # 下面這行 resp 必須跟上面的 prompt 切齊
-                resp = client.models.generate_content(
+               resp = client.models.generate_content(
                     model='gemini-1.5-flash',
                     contents=prompt,
-                    config={"response_mime_type": "application/json", "temperature": 0}
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.0
+                    )
                 )
                 
                 st.session_state["appraisal_result"] = json.loads(resp.text)
@@ -95,10 +99,13 @@ if uploaded_file:
                         
                         # 同樣要注意這裡的對齊
                         resp = client.models.generate_content(
-                            model='gemini-1.5-flash',
-                            contents=prompt,
-                            config={"response_mime_type": "application/json", "temperature": 0}
-                        )
+                    model='gemini-1.5-flash',
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.0
+                    )
+                )
                         
                         st.session_state["audited_result"] = json.loads(resp.text)
                         st.rerun()
