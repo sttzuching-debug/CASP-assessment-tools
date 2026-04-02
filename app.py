@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import json
 import base64
 from utils.pdf_processor import extract_text_with_pages
@@ -15,8 +15,13 @@ if not api_key:
     st.warning("請在設定中輸入 GOOGLE_API_KEY")
     st.stop()
 
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel("models/gemini-1.5-flash")
+api_key = st.secrets.get("GOOGLE_API_KEY", "")
+if not api_key:
+    st.warning("請在設定中輸入 GOOGLE_API_KEY")
+    st.stop()
+
+# 使用新版 SDK 的 Client 寫法
+client = genai.Client(api_key=api_key)
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🛠️ 系統診斷")
@@ -62,7 +67,11 @@ if uploaded_file:
                 paper_text = extract_text_with_pages(uploaded_file)
                 st.session_state["paper_text"] = paper_text
                 prompt = f"{CASP_SYSTEM_PROMPT}\n\n在地情境：{local_context}\n\n文獻內容：{paper_text}"
-                resp = model.generate_content(prompt)
+               resp = client.models.generate_content(
+    model='gemini-1.5-flash',
+    contents=prompt,
+    config={"response_mime_type": "application/json", "temperature": 0}
+)
                 st.session_state["appraisal_result"] = json.loads(resp.text)
                 st.rerun()
 
@@ -80,7 +89,11 @@ if uploaded_file:
                 if st.button("🕵️ 啟動深度覆核 (Re-assessment)"):
                     with st.spinner("資深稽核員交叉比對中..."):
                         prompt = f"{AUDITOR_SYSTEM_PROMPT}\n\n原文：{st.session_state['paper_text']}\n\n初判：{json.dumps(st.session_state['appraisal_result'])}"
-                        resp = model.generate_content(prompt)
+                       resp = client.models.generate_content(
+    model='gemini-1.5-flash',
+    contents=prompt,
+    config={"response_mime_type": "application/json", "temperature": 0}
+)
                         st.session_state["audited_result"] = json.loads(resp.text)
                         st.rerun()
             else:
